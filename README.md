@@ -1,170 +1,130 @@
-# 🧠 AI-Driven Code Intelligence Platform
-
-An intelligent backend system that automatically analyzes code from Git repositories, detects issues, suggests improvements using AI, and tracks code quality over time — with minimal or no frontend.
+Absolutely, Jaison — here’s a **refined README** for your project **Codexa**, filling in the blanks and making it clear, impactful, and developer-friendly.
 
 ---
 
-## 🚀 Features
+# 🚀 Codexa – AI-Driven Code Review & Static Analysis GitHub App
 
-- 📦 **Static Code Analysis** — Detect dead code, complexity, duplication, unused functions, and bad practices.
-- 🤖 **AI-Powered Suggestions** — Use LLMs (e.g., OpenAI, Code Llama) to suggest refactoring and improvements.
-- 🔁 **Git Integration** — Scan repositories on every push, pull request, or scheduled basis.
-- 📈 **Code Quality Metrics** — Track complexity, size, test coverage, and style issues over time.
-- 🔔 **Alerts & Notifications** — Get Slack, Email, or Webhook alerts when code quality drops.
-- 🛠 **API-First Design** — Access insights via REST/gRPC APIs or CLI tool.
-- ⚙️ **Asynchronous Workers** — Distributed job queue to process large codebases efficiently.
-- 🔒 **Auth & RBAC** — Secure access to projects and features with token-based authentication.
+Codexa is an intelligent GitHub App written in **JavaScript** that integrates directly into your repository. Once installed, it listens to `push` events and performs **automated static code analysis** enhanced with **LLMs (Large Language Models)** to detect issues, improve code quality, and prevent secrets leakage — all without leaving GitHub.
 
 ---
 
-## 📁 Project Structure
+## ✨ What Codexa Does
+
+On every push to a repository where Codexa is installed:
+
+1. 📩 **Receives Code via GitHub Webhook**
+
+   - Listens to `push` events
+   - Automatically pulls the latest commits and file diffs
+
+2. 🧠 **Performs Static Code Analysis**
+
+   - Evaluates code complexity
+   - Highlights bad patterns, anti-patterns, or structural issues
+
+3. 🔐 **Detects API Keys / Secrets**
+
+   - Scans for common patterns of hardcoded secrets
+   - Warns about leaked tokens, credentials, and misconfigurations
+
+4. 🤖 **Uses LLMs for Higher-Order Insights**
+
+   - Leverages an LLM to provide contextual feedback, code smells, and refactor suggestions
+   - Offers human-like explanations and improvement tips
+
+5. ✅ **Reports Results via GitHub Checks**
+
+   - Posts inline annotations on commits/files
+   - Summarizes issues as Check Run results directly on GitHub UI
+
+---
+
+## 📦 Features
+
+- Works **out-of-the-box** after GitHub App installation
+- **Fully automated** — no CLI tools or integrations required
+- **Modular analyzer pipeline** (can use regex, ASTs, LLMs)
+- Displays all feedback as part of GitHub Checks on commits
+- Can be extended to include **pull request summaries**, Slack alerts, etc.
+
+---
+
+## 🔐 Permissions Required
+
+When creating your GitHub App, request these permissions:
+
+| Permission          | Access Level |
+| ------------------- | ------------ |
+| Repository contents | Read-only    |
+| Webhooks            | Push         |
+| Checks              | Read & write |
+| Metadata            | Read-only    |
+
+---
+
+## 📦 Tech Stack
+
+- **Language**: JavaScript (Node.js)
+- **GitHub API**: [Octokit](https://github.com/octokit/octokit.js)
+- **Webhooks Proxy** (local): [Smee.io](https://smee.io/)
+- **Static Analysis**: Custom + ESLint + Regex + AST
+- **LLM Integration**: OpenAI / Local LLMs via API
+- **Server**: Express (or built-in Node.js HTTP)
+
+---
+
+## 📁 Example Project Structure
 
 ```
-
 .
-│
-├── cmd/
-│   └── server/              # Entry point: main.go for starting server
-│
-├── internal/
-│   ├── config/              # App config loading, env variables
-│   ├── github/              # GitHub API client, auth logic, webhook parsing
-│   ├── handler/             # HTTP handlers (webhooks, install redirect, etc.)
-│   ├── analysis/            # Static analysis + AI code feedback logic
-│   ├── comments/            # Logic for posting PR comments / check runs
-│   ├── prompts/             # AI prompt templates for PRs
-│   └── utils/               # Helpers (e.g., Git operations, file parsing)
-│
-├── public/                  # (Optional) Any static frontend if needed
-│
-├── scripts/                 # Dev tools (e.g., key generation, webhook testing)
-│
-├── Dockerfile               # For deployment
-├── go.mod
-├── README.md
-└── .env                     # Private keys, GitHub secrets
-
-
+├── index.js               # Main server entry
+├── github/
+│   ├── auth.js            # GitHub App JWT + access token logic
+│   └── checks.js          # GitHub Checks API wrapper
+├── analyzers/
+│   ├── complexity.js      # Code complexity analysis
+│   ├── secrets.js         # API key & secrets scanner
+│   └── llm.js             # Code context analyzer using LLM
+├── handlers/
+│   └── push.js            # Webhook push event handler
+├── utils/
+│   └── files.js           # GitHub file diff/fetch helpers
+├── .env
+├── package.json
+└── README.md
 ```
 
 ---
 
-## ⚙️ Tech Stack
+## 🧪 Example Output on GitHub
 
-| Area            | Stack                       |
-| --------------- | --------------------------- |
-| Language        | Go (Golang)                 |
-| API             | REST + gRPC (optional)      |
-| Queue System    | Redis + Asynq / RabbitMQ    |
-| Auth            | JWT, OAuth (GitHub)         |
-| Git Handling    | `go-git`                    |
-| AI Engine       | OpenAI API / Ollama (local) |
-| Static Analysis | `go/ast`, linters           |
-| DB              | PostgreSQL + TimescaleDB    |
-| Container       | Docker                      |
-| Monitoring      | Prometheus + Grafana        |
+- ✅ Codexa appears as a GitHub Check on each commit
+- 🧵 Click into the check to see:
+
+  - 🧠 LLM-generated advice
+  - ⚠️ Secrets or API key warnings
+  - ⚙️ Code complexity reports
+
+- 🖊️ Inline annotations show exactly which lines have issues
 
 ---
 
-## 🧪 How It Works
+## 🔍 Future Ideas
 
-1. **Connect Git Repo** (via CLI/API)
-2. **Trigger Analysis** on push, PR, or manually
-3. **Code is parsed and analyzed** using custom static analysis tools
-4. **AI Suggestions** generated for selected files/functions
-5. **Metrics logged** to database over time
-6. **Alerts triggered** if thresholds are crossed
-7. **APIs expose** metrics, history, suggestions
+- PR summary comments with natural language reviews
+- Security-focused mode (e.g., OWASP patterns)
+- Dashboard to view metrics across repos
+- CLI to run Codexa locally (Codexa CLI)
 
 ---
 
-## 📦 Installation
+## 📚 References
 
-### Prerequisites:
-
-- Golang `1.21+`
-- Docker
-- PostgreSQL
-- Redis
-
-```bash
-git clone https://github.com/yourusername/code-intelligence-platform.git
-cd code-intelligence-platform
-
-# Run services
-docker-compose up --build
-```
+- [Building GitHub Apps](https://docs.github.com/en/apps)
+- [Octokit.js Docs](https://octokit.github.io/rest.js/)
+- [Smee – Webhook Proxy](https://smee.io/)
+- [JWT for GitHub Apps](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app)
 
 ---
 
-## 🔌 API Endpoints (Examples)
-
-- `POST /repos/analyze` — Trigger analysis
-- `GET /repos/:id/report` — Get latest report
-- `GET /repos/:id/history` — Quality over time
-- `GET /suggestions/:file` — AI suggestions for a file
-- `POST /alerts/config` — Set notification rules
-
----
-
-## 🤖 AI Usage (Example Prompt)
-
-```json
-{
-  "file": "handlers/user.go",
-  "prompt": "Suggest improvements for performance and readability."
-}
-```
-
----
-
-## 📊 Example Metrics Tracked
-
-- Cyclomatic Complexity
-- Code Duplication %
-- Comment Density
-- Function Length
-- Unused Code
-- Refactor Suggestions (AI)
-
----
-
-## 📬 Notifications
-
-- Slack (via webhook)
-- Email (via SMTP config)
-- Custom Webhooks
-
----
-
-## 🛡 Security
-
-- GitHub OAuth login
-- Role-based access (admin, contributor, viewer)
-- Rate-limited APIs
-- Secure token generation for CLI
-
----
-
-## 📈 Future Roadmap
-
-- [ ] Add support for more languages (Python, JS, etc.)
-- [ ] Auto-generate PR comments via AI
-- [ ] Plugin system for custom rules
-- [ ] VSCode Extension (minimal frontend)
-- [ ] Enterprise SCM support (GitLab, Bitbucket)
-
----
-
-## 🧠 What You’ll Learn
-
-- Advanced Golang architecture and modular design
-- Building and scaling backend systems
-- AST-based static code analysis
-- Job queue systems and worker architecture
-- Using AI models effectively via APIs
-- API-first backend development
-- Secure authentication and RBAC
-- Distributed system observability and alerting
-
----
+Let me know if you want this converted into a **starter template** with actual working code to begin from. I can also help set up the **LLM integration** logic and **check run output formatting**.
