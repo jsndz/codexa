@@ -1,28 +1,15 @@
 {
-  "name": "codexa",
-  "version": "1.0.0",
-  "description": "An intelligent backend system that automatically analyzes code from Git repositories, detects issues, suggests improvements using AI, and tracks code quality over time — with minimal or no frontend.",
-  "homepage": "https://github.com/jsndz/codexa#readme",
-  "bugs": {
-    "url": "https://github.com/jsndz/codexa/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jsndz/codexa.git"
-  },
-  "license": "ISC",
-  "author": "",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node index.js"
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@octokit/core": "^7.0.2",
+    "@octokit/webhooks-types": "^7.6.1",
+    "axios": "^1.9.0",
     "dotenv": "^16.5.0",
-    "octokit": "^5.0.3"
-  },
-  "devDependencies": {
-    "smee-client": "^4.1.2"
+    "octokit": "^5.0.3",
+    "probot": "^13.4.5",
+    "tar": "^7.4.3"
   }
 }
