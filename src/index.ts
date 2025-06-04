@@ -1,24 +1,15 @@
-import express from "express";
 import { Probot } from "probot";
-import probotApp from "./app/app";
-import * as dotenv from "dotenv";
-dotenv.config();
 
-const app = express();
+export default (app: Probot) => {
+  app.on("issues.opened", async (context) => {
+    const issueComment = context.issue({
+      body: "Thanks for opening this issue!",
+    });
+    await context.octokit.issues.createComment(issueComment);
+  });
+  // For more information on building apps:
+  // https://probot.github.io/docs/
 
-const probot = new Probot({
-  appId: process.env.APP_ID!,
-  privateKey: process.env.PRIVATE_KEY!,
-  secret: process.env.WEBHOOK_SECRET!,
-});
-
-probot.load(probotApp);
-
-app.get("/", (_, res) => {
-  res.send("Codexa GitHub App is running!");
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is listening on http://localhost:${PORT}`);
-});
+  // To get your app running against GitHub, see:
+  // https://probot.github.io/docs/development/
+};

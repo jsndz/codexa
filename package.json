@@ -1,15 +1,33 @@
 {
-  "devDependencies": {
-    "@types/node": "^22.15.29",
-    "typescript": "^5.8.3"
+  "name": "codexa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Codexa is an intelligent GitHub App written in **Typescript** that integrates directly into your repository. Once installed, it listens to `push` events and performs **automated static code analysis** enhanced with **LLMs (Large Language Models)** to detect issues, improve code quality, and prevent secrets leakage — all without leaving GitHub.",
+  "author": "jsndz",
+  "license": "ISC",
+  "homepage": "https://github.com//",
+  "keywords": [
+    "probot",
+    "github",
+    "probot-app"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "probot run ./lib/index.js",
+    "test": "vitest"
   },
   "dependencies": {
-    "@octokit/core": "^7.0.2",
-    "@octokit/webhooks-types": "^7.6.1",
-    "axios": "^1.9.0",
-    "dotenv": "^16.5.0",
-    "octokit": "^5.0.3",
-    "probot": "^13.4.5",
-    "tar": "^7.4.3"
-  }
+    "probot": "^13.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "nock": "^14.0.0-beta.5",
+    "smee-client": "^2.0.0",
+    "vitest": "^1.3.1",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">= 18"
+  },
+  "type": "module"
 }
