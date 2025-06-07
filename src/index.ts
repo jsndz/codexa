@@ -1,4 +1,5 @@
 import { Probot } from "probot";
+import { analyzeJS } from "./analyzers/typescript/lint.js";
 
 export default (app: Probot) => {
   app.on("push", async (context) => {
@@ -16,7 +17,8 @@ export default (app: Probot) => {
 
       if (!("content" in data)) continue;
       const content = Buffer.from(data.content, "base64").toString("utf-8");
-      console.log(content);
+      const op = analyzeJS(content);
+      console.log(op);
     }
   });
 };

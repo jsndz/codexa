@@ -9,3 +9,6 @@ npm-debug.log
 .env
 coverage
 lib
+
+rules.json
+SCAL.md
