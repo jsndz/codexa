@@ -1,5 +1,5 @@
 import { Probot } from "probot";
-import { analyseJS } from "./analyzers/javascript/lint.js";
+import { runAnalysis } from "./analyzers/javascript/lint.js";
 
 export default (app: Probot) => {
   app.on("push", async (context) => {
@@ -19,7 +19,7 @@ export default (app: Probot) => {
       const content = Buffer.from(data.content, "base64").toString("utf-8");
       console.log(content);
 
-      const op = analyseJS(content);
+      const op = runAnalysis(content);
 
       console.log(op);
     }
