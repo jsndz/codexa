@@ -6,29 +6,36 @@ parser.setLanguage(Javascript);
 
 export function runAnalysis(code: string) {
   const tree = parser.parse(code);
-  console.log(getUnusedVariables(tree));
+  return getUnusedVariables(tree);
 }
 
-export function getUnusedVariables(tree: Parser.Tree): string[] {
-  const declaredVars: Set<string> = new Set();
+export function getUnusedVariables(
+  tree: Parser.Tree
+): { name: string; line: number }[] {
+  const declaredVars: Map<string, number> = new Map();
   const usedVars: Set<string> = new Set();
 
   walk(tree.rootNode, declaredVars, usedVars);
 
-  const unusedVars = [...declaredVars].filter((v) => !usedVars.has(v));
+  const unusedVars = [...declaredVars.entries()]
+    .filter(([v]) => !usedVars.has(v))
+    .map(([name, value]) => ({ name: name, line: value + 1 }));
   return unusedVars;
 }
 
 function walk(
   node: Parser.SyntaxNode,
-  declaredVars: Set<string>,
+  declaredVars: Map<string, number>,
   usedVars: Set<string>
 ) {
   if (
     node.type === "variable_declarator" &&
     node.firstNamedChild?.type === "identifier"
   ) {
-    declaredVars.add(node.firstNamedChild.text);
+    declaredVars.set(
+      node.firstNamedChild.text,
+      node.firstNamedChild.startPosition.row
+    );
   }
 
   if (
