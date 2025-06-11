@@ -10,7 +10,7 @@ export default (app: Probot) => {
       ...commit.added,
       ...commit.modified,
     ]);
-
+    const allAnnotations: any = [];
     for (let i = 0; i < changedFiles.length; i++) {
       const filePath = changedFiles[i];
 
@@ -28,42 +28,41 @@ export default (app: Probot) => {
 
       const op = runAnalysis(content);
 
-      const checkRun = await context.octokit.checks.create({
-        owner,
-        repo,
-        name: "Codexa Static Analysis",
-        head_sha: sha,
-        status: "in_progress",
-        started_at: new Date().toISOString(),
-      });
+      const annotations = op.map((item) => ({
+        path: filePath,
+        start_line: item.line,
+        end_line: item.line,
+        annotation_level: "warning" as "warning",
+        message: `Unused variable: ${item.name}`,
+        title: "Unused Variable",
+      }));
 
-      const checkRunId = checkRun.data.id;
-
-      const annotations = op
-        .map((item) => ({
-          path: filePath,
-          start_line: item.line,
-          end_line: item.line,
-          annotation_level: "warning" as "warning",
-          message: `Unused variable: ${item.name}`,
-          title: "Unused Variable",
-        }))
-        .slice(0, 50);
-
-      await context.octokit.checks.update({
-        owner,
-        repo,
-        check_run_id: checkRunId,
-        check_name: "Codexa Static Analysis",
-        completed_at: new Date().toISOString(),
-        status: "completed",
-        conclusion: annotations.length ? "neutral" : "success",
-        output: {
-          title: "Codexa Report",
-          summary: `${annotations.length} unused variable(s) found.`,
-          annotations: annotations,
-        },
-      });
+      allAnnotations.push(...annotations);
     }
+    const checkRun = await context.octokit.checks.create({
+      owner,
+      repo,
+      name: "Codexa Static Analysis",
+      head_sha: sha,
+      status: "in_progress",
+      started_at: new Date().toISOString(),
+    });
+
+    const checkRunId = checkRun.data.id;
+
+    await context.octokit.checks.update({
+      owner,
+      repo,
+      check_run_id: checkRunId,
+      check_name: "Codexa Static Analysis",
+      completed_at: new Date().toISOString(),
+      status: "completed",
+      conclusion: allAnnotations.length ? "neutral" : "success",
+      output: {
+        title: "Codexa Report",
+        summary: `${allAnnotations.length} unused variable(s) found.`,
+        annotations: allAnnotations,
+      },
+    });
   });
 };
