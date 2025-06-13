@@ -15,6 +15,15 @@ export default (app: Probot) => {
       const filePath = changedFiles[i];
 
       if (!filePath.endsWith(".js") && !filePath.endsWith(".ts")) continue;
+      if (filePath.match(/\.env(\..*)?$/)) {
+        const envannotation = {
+          path: filePath,
+          annotation_level: "warning" as "warning",
+          message: `.env file found: `,
+          title: "Unused Variable",
+        };
+        allAnnotations.push(envannotation);
+      }
 
       const { data } = await context.octokit.repos.getContent({
         owner,
@@ -22,12 +31,9 @@ export default (app: Probot) => {
         path: filePath,
         ref: sha,
       });
-
       if (!("content" in data)) continue;
       const content = Buffer.from(data.content, "base64").toString("utf-8");
-
       const op = runAnalysis(content);
-
       const annotations = op.map((item) => ({
         path: filePath,
         start_line: item.line,
