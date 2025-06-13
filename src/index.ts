@@ -1,5 +1,6 @@
 import { Probot } from "probot";
 import { runAnalysis } from "./analyzers/javascript/lint.js";
+import { runSecurityAnalysis } from "./security/javascript/security.js";
 
 export default (app: Probot) => {
   app.on("push", async (context) => {
@@ -34,6 +35,7 @@ export default (app: Probot) => {
       if (!("content" in data)) continue;
       const content = Buffer.from(data.content, "base64").toString("utf-8");
       const op = runAnalysis(content);
+      const sec = runSecurityAnalysis(content);
       const annotations = op.map((item) => ({
         path: filePath,
         start_line: item.line,
@@ -42,7 +44,15 @@ export default (app: Probot) => {
         message: `Unused variable: ${item.name}`,
         title: "Unused Variable",
       }));
-
+      const annotationsSec = sec.map((item) => ({
+        path: filePath,
+        start_line: item.line,
+        end_line: item.line,
+        annotation_level: "warning" as "warning",
+        message: `Unused variable: ${item.name}`,
+        title: "Unused Variable",
+      }));
+      allAnnotations.push(...annotationsSec);
       allAnnotations.push(...annotations);
     }
     const checkRun = await context.octokit.checks.create({
