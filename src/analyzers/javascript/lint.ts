@@ -1,6 +1,6 @@
 import Parser from "tree-sitter";
 import Javascript from "tree-sitter-javascript";
-
+var compelxity: number = 0;
 const parser = new Parser();
 parser.setLanguage(Javascript);
 
@@ -43,6 +43,20 @@ function walk(
     node.parent?.type !== "variable_declarator"
   ) {
     usedVars.add(node.text);
+  }
+  if (
+    [
+      "if_statement",
+      "for_statement",
+      "while_statement",
+      "switch_case",
+      "conditional_expression",
+    ].includes(node.type)
+  ) {
+    compelxity++;
+  }
+  if (node.type === "binary_expression" && ["&&", "||"].includes(node.text)) {
+    compelxity++;
   }
 
   for (let i = 0; i < node.namedChildCount; i++) {
