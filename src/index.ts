@@ -1,6 +1,9 @@
 import { Probot } from "probot";
-import { runAnalysis } from "./analyzers/javascript/lint.js";
-import { runSecurityAnalysis } from "./security/javascript/security.js";
+import { parseCode } from "./parser.js";
+import { getUnusedVariables } from "./analyzers/javascript/lint.js";
+import { getDeadCodeExpressions } from "./analyzers/javascript/deadcode.js";
+import { getDangerousFunctions } from "./security/javascript/security.js";
+import { analyzeComplexity } from "./analyzers/javascript/complexity.js";
 
 export default (app: Probot) => {
   app.on("push", async (context) => {
@@ -11,20 +14,11 @@ export default (app: Probot) => {
       ...commit.added,
       ...commit.modified,
     ]);
-    const allAnnotations: any = [];
-    for (let i = 0; i < changedFiles.length; i++) {
-      const filePath = changedFiles[i];
 
+    const allAnnotations = [];
+
+    for (const filePath of changedFiles) {
       if (!filePath.endsWith(".js") && !filePath.endsWith(".ts")) continue;
-      if (filePath.match(/\.env(\..*)?$/)) {
-        const envannotation = {
-          path: filePath,
-          annotation_level: "warning" as "warning",
-          message: `.env file found: `,
-          title: "Unused Variable",
-        };
-        allAnnotations.push(envannotation);
-      }
 
       const { data } = await context.octokit.repos.getContent({
         owner,
@@ -34,27 +28,69 @@ export default (app: Probot) => {
       });
       if (!("content" in data)) continue;
       const content = Buffer.from(data.content, "base64").toString("utf-8");
-      const op = runAnalysis(content);
-      const sec = runSecurityAnalysis(content);
-      const annotations = op.map((item) => ({
+
+      if (filePath.match(/\.env(\..*)?$/)) {
+        allAnnotations.push({
+          path: filePath,
+          start_line: 1,
+          end_line: 1,
+          annotation_level: "warning" as "warning",
+          message: ".env file detected",
+          title: "Leaked Env File",
+        });
+        continue;
+      }
+
+      const tree = parseCode(content);
+
+      const unusedVars = getUnusedVariables(tree);
+      const deadCode = getDeadCodeExpressions(tree);
+      const dangerousFns = getDangerousFunctions(tree);
+      const complexityScore = analyzeComplexity(tree);
+
+      unusedVars.forEach(({ name, line }) =>
+        allAnnotations.push({
+          path: filePath,
+          start_line: line,
+          end_line: line,
+          annotation_level: "warning",
+          message: `Unused variable: ${name}`,
+          title: "Unused Variable",
+        })
+      );
+
+      deadCode.forEach(({ code, line }) =>
+        allAnnotations.push({
+          path: filePath,
+          start_line: line,
+          end_line: line,
+          annotation_level: "warning",
+          message: `Dead code after exit: ${code}`,
+          title: "Dead Code",
+        })
+      );
+
+      dangerousFns.forEach(({ name, line }) =>
+        allAnnotations.push({
+          path: filePath,
+          start_line: line,
+          end_line: line,
+          annotation_level: "warning",
+          message: `Dangerous usage: ${name}`,
+          title: "Security Issue",
+        })
+      );
+
+      allAnnotations.push({
         path: filePath,
-        start_line: item.line,
-        end_line: item.line,
-        annotation_level: "warning" as "warning",
-        message: `Unused variable: ${item.name}`,
-        title: "Unused Variable",
-      }));
-      const annotationsSec = sec.map((item) => ({
-        path: filePath,
-        start_line: item.line,
-        end_line: item.line,
-        annotation_level: "warning" as "warning",
-        message: `Unused variable: ${item.name}`,
-        title: "Unused Variable",
-      }));
-      allAnnotations.push(...annotationsSec);
-      allAnnotations.push(...annotations);
+        start_line: 1,
+        end_line: 1,
+        annotation_level: "notice" as "notice",
+        message: `Cyclomatic complexity score: ${complexityScore}`,
+        title: "Complexity",
+      });
     }
+
     const checkRun = await context.octokit.checks.create({
       owner,
       repo,
@@ -64,20 +100,18 @@ export default (app: Probot) => {
       started_at: new Date().toISOString(),
     });
 
-    const checkRunId = checkRun.data.id;
-
     await context.octokit.checks.update({
       owner,
       repo,
-      check_run_id: checkRunId,
+      check_run_id: checkRun.data.id,
       check_name: "Codexa Static Analysis",
       completed_at: new Date().toISOString(),
       status: "completed",
       conclusion: allAnnotations.length ? "neutral" : "success",
       output: {
         title: "Codexa Report",
-        summary: `${allAnnotations.length} unused variable(s) found.`,
-        annotations: allAnnotations,
+        summary: `${allAnnotations.length} issue(s) found.`,
+        annotations: allAnnotations.slice(0, 50),
       },
     });
   });
