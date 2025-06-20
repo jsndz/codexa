@@ -1,0 +1,14 @@
+github_key.pem
+node_modules/
+.env
+
+
+npm-debug.log
+*.pem
+!mock-cert.pem
+.env
+coverage
+lib
+
+rules.json
+SCAL.md
