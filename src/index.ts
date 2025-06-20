@@ -18,17 +18,6 @@ export default (app: Probot) => {
     const allAnnotations = [];
 
     for (const filePath of changedFiles) {
-      if (!filePath.endsWith(".js") && !filePath.endsWith(".ts")) continue;
-
-      const { data } = await context.octokit.repos.getContent({
-        owner,
-        repo,
-        path: filePath,
-        ref: sha,
-      });
-      if (!("content" in data)) continue;
-      const content = Buffer.from(data.content, "base64").toString("utf-8");
-
       if (filePath.match(/\.env(\..*)?$/)) {
         allAnnotations.push({
           path: filePath,
@@ -40,6 +29,18 @@ export default (app: Probot) => {
         });
         continue;
       }
+
+      if (!filePath.endsWith(".js") && !filePath.endsWith(".ts")) continue;
+
+      const { data } = await context.octokit.repos.getContent({
+        owner,
+        repo,
+        path: filePath,
+        ref: sha,
+      });
+
+      if (!("content" in data)) continue;
+      const content = Buffer.from(data.content, "base64").toString("utf-8");
 
       const tree = parseCode(content);
 

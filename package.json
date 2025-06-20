@@ -4,7 +4,7 @@
   "private": true,
   "description": "Codexa is an intelligent GitHub App written in **Typescript** that integrates directly into your repository. Once installed, it listens to `push` events and performs **automated static code analysis** enhanced with **LLMs (Large Language Models)** to detect issues, improve code quality, and prevent secrets leakage — all without leaving GitHub.",
   "author": "jsndz",
-  "license": "ISC",
+  "license": "BUSL-1.1",
   "homepage": "https://github.com//",
   "keywords": [
     "probot",
@@ -18,6 +18,8 @@
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx"
   },
   "dependencies": {
+    "axios": "^1.10.0",
+    "dotenv": "^16.5.0",
     "pg-protocol": "^1.10.0",
     "probot": "^13.0.1",
     "tree-sitter": "^0.21.1",

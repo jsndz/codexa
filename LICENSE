@@ -1,15 +1,25 @@
-ISC License
+Business Source License 1.1
 
-Copyright (c) 2025, jsndz
+Licensor: Jaison Dsouza <jaisondz9360@gmail.com>
+Licensed Work: The Codexa project (codebase, documentation, and tools)
+Change Date: 2029-07-30
+Change License: Apache License, Version 2.0
 
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
+Terms
 
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+1. Use Limitation  
+   You may use this Licensed Work for personal, academic, and non-commercial purposes only. Commercial use—including running Codexa as a paid SaaS or integrating it into commercial tools—is not permitted until the Change Date.
+
+2. Contribution  
+   You may copy, modify, and contribute to the codebase. Contributions must also be licensed under this license.
+
+3. Distribution  
+   You may fork and share modified versions **only for non-commercial use** and must include this LICENSE in all distributions.
+
+4. No Competing Services  
+   You may not use Codexa’s code to build or run a competing product or service that offers similar static analysis or AI-assisted development tooling.
+
+5. Change Date  
+   On 2029-07-30, this license will automatically convert to the Apache License 2.0, and all use restrictions will be lifted.
+
+For more information, see LICENSE-FAQ.md

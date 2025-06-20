@@ -63,32 +63,9 @@ When creating your GitHub App, request these permissions:
 - **Language**: JavaScript (Node.js)
 - **GitHub API**: [Octokit](https://github.com/octokit/octokit.js)
 - **Webhooks Proxy** (local): [Smee.io](https://smee.io/)
-- **Static Analysis**: Custom + ESLint + Regex + AST
+- **Static Analysis**: AST with tree-sitter
 - **LLM Integration**: OpenAI / Local LLMs via API
-- **Server**: Express (or built-in Node.js HTTP)
-
----
-
-## 📁 Example Project Structure
-
-```
-.
-├── index.js               # Main server entry
-├── github/
-│   ├── auth.js            # GitHub App JWT + access token logic
-│   └── checks.js          # GitHub Checks API wrapper
-├── analyzers/
-│   ├── complexity.js      # Code complexity analysis
-│   ├── secrets.js         # API key & secrets scanner
-│   └── llm.js             # Code context analyzer using LLM
-├── handlers/
-│   └── push.js            # Webhook push event handler
-├── utils/
-│   └── files.js           # GitHub file diff/fetch helpers
-├── .env
-├── package.json
-└── README.md
-```
+- **Server**: Express
 
 ---
 
@@ -122,11 +99,6 @@ When creating your GitHub App, request these permissions:
 - [JWT for GitHub Apps](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app)
 
 ---
-
-
-# codexa
-
-> A GitHub App built with [Probot](https://github.com/probot/probot) that Codexa is an intelligent GitHub App written in **Typescript** that integrates directly into your repository. Once installed, it listens to &#x60;push&#x60; events and performs **automated static code analysis** enhanced with **LLMs (Large Language Models)** to detect issues, improve code quality, and prevent secrets leakage — all without leaving GitHub.
 
 ## Setup
 

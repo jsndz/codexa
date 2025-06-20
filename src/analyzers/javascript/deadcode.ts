@@ -9,6 +9,7 @@ const EXIT_STATEMENTS = new Set([
 
 export function getDeadCodeExpressions(tree: Parser.Tree) {
   const deadStatements: { line: number; code: string }[] = [];
+  console.log("HELO");
 
   function walk(node: Parser.SyntaxNode) {
     if (node.type === "block") {
@@ -32,5 +33,7 @@ export function getDeadCodeExpressions(tree: Parser.Tree) {
   }
 
   walk(tree.rootNode);
+  console.log(deadStatements);
+
   return deadStatements;
 }
