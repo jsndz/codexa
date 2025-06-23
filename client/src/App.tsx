@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Code2,
   ChevronDown,
@@ -7,6 +7,7 @@ import {
   Rocket,
   Sparkles,
 } from "lucide-react";
+import axios from "axios";
 
 interface FileChange {
   filename: string;
@@ -28,6 +29,9 @@ const mockFiles: FileChange[] = [
 ];
 
 function App() {
+  const params = new URLSearchParams(window.location.search);
+  const repo = params.get("repo");
+  const sha = params.get("sha");
   const [files, setFiles] = useState<FileChange[]>(mockFiles);
   const [editedContent, setEditedContent] = useState<Record<string, string>>(
     {}
@@ -128,9 +132,26 @@ function App() {
 
     return diffLines;
   };
+  const init = async () => {
+    const data = { repo, sha };
+    const res = await axios.post("http://localhost:3001/", data);
+    console.log(res);
+  };
 
+  useEffect(() => {
+    init();
+  });
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-mono">
+      <div>
+        <h1>Code Report</h1>
+        <p>
+          <strong>Repo:</strong> {repo}
+        </p>
+        <p>
+          <strong>SHA:</strong> {sha}
+        </p>
+      </div>
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">

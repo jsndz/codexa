@@ -1,5 +1,5 @@
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 
-dotenv.config();
+// dotenv.config();
 
-export const OLLAMA_URL = process.env.OLLAMA_API;
+// export const OLLAMA_URL = process.env.OLLAMA_API;

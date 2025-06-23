@@ -129,3 +129,60 @@ For more, check out the [Contributing Guide](CONTRIBUTING.md).
 ## License
 
 [ISC](LICENSE) © 2025 jsndz
+
+## User Flow
+
+- GitHub Check has a link like https://codexa.app/ai-report?sha=abc123&repo=xyz
+- When frontend loads, it sends metadata (sha, repo, etc.) to Codexa backend
+- Backend fetches the files using GitHub App token
+- Backend generates LLM suggestions (live)
+- Sends result to frontend to render
+- You can now show a Compare View with PR button
+
+## Visual
+
+1.  GitHub Push → GitHub App → Check with "View AI Suggestions"
+    |
+    User clicks (with ?sha=xxx&repo=yyy)
+    |
+    Frontend calls /analyze endpoint
+    |
+    Backend fetches changed files at that SHA
+    |
+    Sends code to LLM (Ollama/other)
+    |
+    Returns annotated suggestions + diffs
+    |
+    Frontend renders diff + "Create PR" button
+
+2.  ┌────────────────────────────┐
+    │ GitHub.com │
+    │ │
+    │ ┌──── Push → Webhook ─────┐
+    │ │ │
+    └──▼─────────────────────────┘
+    │
+    ┌──▼───────────────────────────┐
+    │ GitHub App (Probot) │
+    │ - Receives push │
+    │ - Runs SCA │
+    │ - Posts Check with Link │
+    │ https://codexa.app/report │
+    └──────────────────────────────┘
+
+    User clicks link on GitHub Check
+
+┌────────────┐
+│ Frontend │
+│ codexa.app │
+└─────┬──────┘
+│
+▼
+┌────────────────────────────┐
+│ Codexa Backend (LLM API) │
+│ - Receives SHA │
+│ - Auths as GitHub App │
+│ - Fetches changed files │
+│ - Analyzes via LLM │
+│ - Returns diff │
+└────────────────────────────┘

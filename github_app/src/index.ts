@@ -5,7 +5,7 @@ import { getDeadCodeExpressions } from "./analyzers/javascript/deadcode.js";
 import { getDangerousFunctions } from "./security/javascript/security.js";
 import { analyzeComplexity } from "./analyzers/javascript/complexity.js";
 
-const LINK = "http://localhost:8080/report";
+const LINK = "http://localhost:5173/report";
 
 export default (app: Probot) => {
   app.on("push", async (context) => {
@@ -98,7 +98,7 @@ export default (app: Probot) => {
       start_line: 1,
       end_line: 1,
       annotation_level: "notice" as "notice",
-      message: `For AI recommendation click on: ${LINK}/?repo=${owner}/${repo}&sha=${sha}`,
+      message: `For AI recommendation, visit: ${LINK}?repo=${owner}/${repo}&sha=${sha}`,
       title: "AI Suggestions",
     });
     const checkRun = await context.octokit.checks.create({
