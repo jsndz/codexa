@@ -2,7 +2,8 @@
   "compilerOptions": {
     "incremental": true,
     "target": "es2022",
-    "module": "Node16",
+    "module": "es2022",
+    "moduleResolution": "node",
     "declaration": true,
     "sourceMap": true,
     "outDir": "./lib",
@@ -16,7 +17,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
 
-    "moduleResolution": "Node16",
+    /* Interop and casing */
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },

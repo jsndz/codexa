@@ -12,6 +12,7 @@ export default (app: Probot) => {
     const owner = context.payload.repository.owner.login;
     const repo = context.payload.repository.name;
     const sha = context.payload.after;
+    const installationId = context.payload.installation?.id;
     const changedFiles = context.payload.commits.flatMap((commit) => [
       ...commit.added,
       ...commit.modified,
@@ -98,7 +99,7 @@ export default (app: Probot) => {
       start_line: 1,
       end_line: 1,
       annotation_level: "notice" as "notice",
-      message: `For AI recommendation, visit: ${LINK}?repo=${owner}/${repo}&sha=${sha}`,
+      message: `For AI recommendation, visit: ${LINK}?repo=${owner}/${repo}&sha=${sha}&iid=${installationId}`,
       title: "AI Suggestions",
     });
     const checkRun = await context.octokit.checks.create({
