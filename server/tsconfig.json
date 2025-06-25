@@ -8,16 +8,13 @@
     "sourceMap": true,
     "outDir": "./lib",
 
-    /* Strict Type-Checking Options */
     "strict": true,
 
-    /* Additional Checks */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
 
-    /* Interop and casing */
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
