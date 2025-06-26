@@ -5,6 +5,8 @@ import { Octokit } from "@octokit/rest";
 import { createAppAuth } from "@octokit/auth-app";
 
 import { PORT, APP_ID, PRIVATE_KEY } from "./config/config.js";
+import { extractFunctionsFromCommit } from "./utils/extract.js";
+import { ExtractedFunction } from "./utils/types.js";
 
 const app = express();
 const auth = createAppAuth({
@@ -22,10 +24,11 @@ app.use(cors(corsOptions));
 
 app.post("/", async (req, res) => {
   try {
-    const { iid } = req.body;
+    const { iid, sha, repo, owner } = req.body;
     if (!iid) {
       res.status(400).json({ message: "Installation ID is required" });
     }
+    console.log(sha, repo, iid, owner);
 
     const installationAuth = await auth({
       type: "installation",
@@ -36,12 +39,15 @@ app.post("/", async (req, res) => {
       auth: installationAuth.token,
     });
 
-    const { data } = await octokit.repos.get({
-      owner: "jsndz",
-      repo: "test",
-    });
+    const functions: ExtractedFunction[] = await extractFunctionsFromCommit(
+      octokit,
+      owner,
+      repo,
+      sha
+    );
+    console.log(functions);
 
-    res.json({ message: "Success", repo: data.full_name });
+    res.json({ message: "Success" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
