@@ -7,6 +7,7 @@ import { createAppAuth } from "@octokit/auth-app";
 import { PORT, APP_ID, PRIVATE_KEY } from "./config/config.js";
 import { extractFunctionsFromCommit } from "./utils/extract.js";
 import { ExtractedFunction } from "./utils/types.js";
+import { llmAnalysis } from "./utils/llm.js";
 
 const app = express();
 const auth = createAppAuth({
@@ -45,7 +46,7 @@ app.post("/", async (req, res) => {
       repo,
       sha
     );
-    console.log(functions);
+    llmAnalysis(functions);
 
     res.json({ message: "Success" });
   } catch (error) {
