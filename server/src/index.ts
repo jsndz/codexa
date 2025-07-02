@@ -46,9 +46,21 @@ app.post("/", async (req, res) => {
       repo,
       sha
     );
-    llmAnalysis(functions);
+    const llmResults = await llmAnalysis(functions);
 
-    res.json({ message: "Success" });
+    const enrichedResults = llmResults.map((result: any) => {
+      const original = functions.find(
+        (f) => f.functionName === result.functionName
+      );
+      return {
+        ...result,
+        filePath: original?.filePath || "",
+        startLine: original?.startLine || 0,
+        endLine: original?.endLine || 0,
+      };
+    });
+    console.log("data", enrichedResults);
+    res.json({ message: "Success", data: enrichedResults });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });

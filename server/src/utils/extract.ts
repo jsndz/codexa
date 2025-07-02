@@ -51,6 +51,5 @@ export async function extractFunctionsFromCommit(
         });
       });
   }
-
   return functions;
 }

@@ -99,7 +99,7 @@ export default (app: Probot) => {
       start_line: 1,
       end_line: 1,
       annotation_level: "notice" as "notice",
-      message: `For AI recommendation, visit: ${LINK}?repo=${owner}/${repo}&sha=${sha}&iid=${installationId}`,
+      message: `For AI recommendation, visit: ${LINK}?owner=${owner}&repo=${repo}&sha=${sha}&iid=${installationId}`,
       title: "AI Suggestions",
     });
     const checkRun = await context.octokit.checks.create({

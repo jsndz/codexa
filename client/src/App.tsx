@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Code2,
   ChevronDown,
@@ -33,6 +33,7 @@ function App() {
   const repo = params.get("repo");
   const sha = params.get("sha");
   const iid = params.get("iid");
+  const owner = params.get("owner");
   const [files, setFiles] = useState<FileChange[]>(mockFiles);
   const [editedContent, setEditedContent] = useState<Record<string, string>>(
     {}
@@ -133,13 +134,16 @@ function App() {
 
     return diffLines;
   };
+  const hasRun = useRef(false);
   const init = async () => {
-    const data = { repo, sha, iid };
+    const data = { repo, sha, iid, owner };
     const res = await axios.post("http://localhost:3001/", data);
     console.log(res);
   };
 
   useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
     init();
   }, []);
   return (

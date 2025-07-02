@@ -1,9 +1,10 @@
 import { ExtractedFunction } from "./types";
 
 export async function llmAnalysis(data: ExtractedFunction[]) {
-  const prompt = `You're an expert developer. Here are several JavaScript functions.  
-Only suggest improvements if absolutely necessary (e.g., improve readability, fix issues, or simplify logic).  
-If a function is already good, return the exact same code.  
+  const prompt = `You're an expert developer. Here are several JavaScript functions.
+
+Only suggest improvements if absolutely necessary (e.g., improve readability, fix issues, or simplify logic).
+If a function is already good, return the exact same code.
 
 Each item is in this format:
 {
@@ -16,16 +17,15 @@ Analyze each function and return ONLY an array like this:
 [
   {
     "functionName": "name",
-    "newCode": "updated code string"
+    "newCode": "updated code string",
+    "explanation": "explanation of what was changed and why"
   }
 ]
 
-Do not include any explanation. Only return valid JSON.
-
+Return valid JSON only.
 Here is the input:
 ${JSON.stringify(data, null, 2)}
 `;
-  console.log(prompt);
 
   const response = await fetch("http://localhost:11434/api/generate", {
     method: "POST",
@@ -36,8 +36,23 @@ ${JSON.stringify(data, null, 2)}
       stream: false,
     }),
   });
-  const json = await response.json();
-  console.log("JSON:", json);
 
-  return;
+  const json = await response.json();
+  const text = json.response;
+
+  const match = text.match(/\[\s*{[\s\S]*?}\s*]/);
+
+  if (!match) {
+    throw new Error("Could not extract JSON from LLM response.");
+  }
+
+  try {
+    const suggestions = JSON.parse(match[0]);
+    console.log(suggestions);
+
+    return suggestions;
+  } catch (err) {
+    console.error("Failed to parse LLM JSON:", err);
+    throw err;
+  }
 }
