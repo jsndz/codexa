@@ -18,6 +18,9 @@ interface FileChange {
   startLine: number;
   endLine: number;
 }
+type GroupedFiles = Record<string, FileChange[]>;
+const getKey = (filePath: string, functionName: string) =>
+  `${filePath}:${functionName}`;
 
 function App() {
   const params = new URLSearchParams(window.location.search);
@@ -29,14 +32,25 @@ function App() {
   const [editedContent, setEditedContent] = useState<Record<string, string>>(
     {}
   );
+  const groupedFiles: GroupedFiles = {};
+  files?.forEach((fc) => {
+    if (!groupedFiles[fc.filePath]) groupedFiles[fc.filePath] = [];
+    groupedFiles[fc.filePath].push(fc);
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   const [collapsedFiles, setCollapsedFiles] = useState<Set<string>>(new Set());
 
   const removeFile = (filePath: string) => {
-    setFiles(files?.filter((file) => file.filePath !== filePath));
-    const newEditedContent = { ...editedContent };
-    delete newEditedContent[filePath];
+    const filteredFiles = files?.filter((file) => file.filePath !== filePath);
+    setFiles(filteredFiles);
+
+    const newEditedContent: Record<string, string> = {};
+    for (const key in editedContent) {
+      if (!key.startsWith(filePath + ":")) {
+        newEditedContent[key] = editedContent[key];
+      }
+    }
     setEditedContent(newEditedContent);
   };
 
@@ -50,22 +64,52 @@ function App() {
     setCollapsedFiles(newCollapsed);
   };
 
-  const handleCodeEdit = (filePath: string, newContent: string) => {
+  const handleCodeEdit = (
+    filePath: string,
+    functionName: string,
+    newContent: string
+  ) => {
     setEditedContent({
       ...editedContent,
-      [filePath]: newContent,
+      [getKey(filePath, functionName)]: newContent,
     });
   };
 
-  const createPullRequest = () => {
-    const finalContent: Record<string, string> = {};
-    files?.forEach((file) => {
-      finalContent[file.filePath] =
-        editedContent[file.filePath] || file.newCode;
+  const createPullRequest = async () => {
+    const finalChanges: Record<
+      string,
+      { startLine: number; endLine: number; newCode: string }[]
+    > = {};
+
+    files?.forEach((f) => {
+      const key = getKey(f.filePath, f.functionName);
+      const content = editedContent[key] || f.newCode;
+
+      if (!finalChanges[f.filePath]) {
+        finalChanges[f.filePath] = [];
+      }
+
+      finalChanges[f.filePath].push({
+        startLine: f.startLine,
+        endLine: f.endLine,
+        newCode: content,
+      });
     });
 
-    console.log("Creating PR with content:", finalContent);
-    alert("PR content logged to console! 🚀");
+    const payload = {
+      repo,
+      owner,
+      sha,
+      iid,
+      changes: finalChanges,
+    };
+
+    try {
+      console.log(payload);
+    } catch (err) {
+      console.error("❌ Failed to create PR", err);
+      alert("Failed to create PR. See console.");
+    }
   };
 
   const generateDiffLines = (original: string, newCode: string) => {
@@ -192,20 +236,18 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="space-y-6">
-          {files?.map((file) => {
-            const isCollapsed = collapsedFiles.has(file.filePath);
-            const currentContent = editedContent[file.filePath] || file.newCode;
-            const diffLines = generateDiffLines(file.original, file.newCode);
+          {Object.entries(groupedFiles).map(([filePath, functions]) => {
+            const isCollapsed = collapsedFiles.has(filePath);
 
             return (
               <div
-                key={file.filePath}
+                key={filePath}
                 className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden"
               >
                 {/* File Header */}
                 <div className="bg-gray-750 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
                   <button
-                    onClick={() => toggleFileCollapse(file.filePath)}
+                    onClick={() => toggleFileCollapse(filePath)}
                     className="flex items-center space-x-2 text-left hover:text-teal-400 transition-colors"
                   >
                     {isCollapsed ? (
@@ -214,11 +256,11 @@ function App() {
                       <ChevronDown className="w-4 h-4" />
                     )}
                     <span className="font-semibold text-gray-100">
-                      {file.filePath}
+                      {filePath}
                     </span>
                   </button>
                   <button
-                    onClick={() => removeFile(file.filePath)}
+                    onClick={() => removeFile(filePath)}
                     className="p-1 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300 transition-colors"
                     title="Remove file from changes"
                   >
@@ -228,78 +270,108 @@ function App() {
 
                 {!isCollapsed && (
                   <div className="divide-y divide-gray-700">
-                    {/* Diff View */}
-                    <div className="bg-gray-850">
-                      <div className="text-xs text-gray-400 px-4 py-2 bg-gray-800 border-b border-gray-700">
-                        Diff Preview
-                      </div>
-                      <div className="max-h-60 overflow-auto">
-                        {diffLines.map((line, index) => (
-                          <div
-                            key={index}
-                            className={`flex ${
-                              line.type === "added"
-                                ? "bg-teal-500/10 border-l-2 border-teal-500"
-                                : line.type === "removed"
-                                ? "bg-red-400/10 border-l-2 border-red-400"
-                                : "hover:bg-gray-800/50"
-                            }`}
-                          >
-                            <div className="w-12 text-center py-1 text-xs text-gray-500 bg-gray-800 border-r border-gray-700">
-                              {line.type === "removed"
-                                ? line.originalLineNumber
-                                : line.lineNumber || ""}
+                    {functions.map((func) => {
+                      const key = getKey(func.filePath, func.functionName);
+                      const currentContent = editedContent[key] || func.newCode;
+                      const diffLines = generateDiffLines(
+                        func.original,
+                        func.newCode
+                      );
+
+                      return (
+                        <div key={key}>
+                          {/* Function Name & Lines */}
+                          <div className="px-4 py-2 text-sm text-gray-400 bg-gray-850 border-b border-gray-700">
+                            <span className="font-semibold text-teal-400">
+                              {func.functionName}
+                            </span>{" "}
+                            (Lines {func.startLine}–{func.endLine}) —{" "}
+                            <em className="text-xs">{func.explantion}</em>
+                          </div>
+
+                          {/* Diff View */}
+                          <div className="bg-gray-850">
+                            <div className="text-xs text-gray-400 px-4 py-2 bg-gray-800 border-b border-gray-700">
+                              Diff Preview
                             </div>
-                            <div
-                              className={`w-8 text-center py-1 text-xs font-bold ${
-                                line.type === "added"
-                                  ? "text-teal-400 bg-teal-500/10"
-                                  : line.type === "removed"
-                                  ? "text-red-400 bg-red-400/10"
-                                  : "bg-gray-800 text-gray-600"
-                              }`}
-                            >
-                              {line.type === "added"
-                                ? "+"
-                                : line.type === "removed"
-                                ? "-"
-                                : ""}
-                            </div>
-                            <div className="flex-1 px-4 py-1 text-sm whitespace-pre">
-                              {line.content}
+                            <div className="max-h-60 overflow-auto">
+                              {diffLines.map((line, index) => (
+                                <div
+                                  key={index}
+                                  className={`flex ${
+                                    line.type === "added"
+                                      ? "bg-teal-500/10 border-l-2 border-teal-500"
+                                      : line.type === "removed"
+                                      ? "bg-red-400/10 border-l-2 border-red-400"
+                                      : "hover:bg-gray-800/50"
+                                  }`}
+                                >
+                                  <div className="w-12 text-center py-1 text-xs text-gray-500 bg-gray-800 border-r border-gray-700">
+                                    {line.type === "removed"
+                                      ? func.startLine +
+                                        (line.originalLineNumber ?? 1) -
+                                        1
+                                      : line.lineNumber
+                                      ? func.startLine + line.lineNumber - 1
+                                      : ""}
+                                  </div>
+                                  <div
+                                    className={`w-8 text-center py-1 text-xs font-bold ${
+                                      line.type === "added"
+                                        ? "text-teal-400 bg-teal-500/10"
+                                        : line.type === "removed"
+                                        ? "text-red-400 bg-red-400/10"
+                                        : "bg-gray-800 text-gray-600"
+                                    }`}
+                                  >
+                                    {line.type === "added"
+                                      ? "+"
+                                      : line.type === "removed"
+                                      ? "-"
+                                      : ""}
+                                  </div>
+                                  <div className="flex-1 px-4 py-1 text-sm whitespace-pre">
+                                    {line.content}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
 
-                    {/* Editable Code */}
-                    <div>
-                      <div className="text-xs text-gray-400 px-4 py-2 bg-gray-800 border-b border-gray-700">
-                        Edit newCode Code
-                      </div>
-                      <div className="relative">
-                        <textarea
-                          value={currentContent}
-                          onChange={(e) =>
-                            handleCodeEdit(file.filePath, e.target.value)
-                          }
-                          className="w-full bg-gray-900 text-gray-100 p-4 pl-16 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/50 min-h-[200px]"
-                          spellCheck={false}
-                        />
-                        {/* Line Numbers */}
-                        <div className="absolute left-0 top-0 px-2 py-4 bg-gray-800 border-r border-gray-700 text-xs text-gray-500 select-none pointer-events-none">
-                          {currentContent.split("\n").map((_, index) => (
-                            <div
-                              key={index}
-                              className="leading-[1.375rem] text-right"
-                            >
-                              {index + 1}
+                          {/* Editable Section */}
+                          <div>
+                            <div className="text-xs text-gray-400 px-4 py-2 bg-gray-800 border-b border-gray-700">
+                              Edit Suggested Code
                             </div>
-                          ))}
+                            <div className="relative">
+                              <textarea
+                                value={currentContent}
+                                onChange={(e) =>
+                                  handleCodeEdit(
+                                    func.filePath,
+                                    func.functionName,
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full bg-gray-900 text-gray-100 p-4 pl-16 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/50 min-h-[200px]"
+                                spellCheck={false}
+                              />
+                              {/* Line Numbers */}
+                              <div className="absolute left-0 top-0 px-2 py-4 bg-gray-800 border-r border-gray-700 text-xs text-gray-500 select-none pointer-events-none">
+                                {currentContent.split("\n").map((_, index) => (
+                                  <div
+                                    key={index}
+                                    className="leading-[1.375rem] text-right"
+                                  >
+                                    {func.startLine + index}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
