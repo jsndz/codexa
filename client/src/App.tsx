@@ -10,23 +10,14 @@ import {
 import axios from "axios";
 
 interface FileChange {
-  filename: string;
+  functionName: string;
   original: string;
-  suggested: string;
+  newCode: string;
+  explantion: string;
+  filePath: string;
+  startLine: number;
+  endLine: number;
 }
-
-const mockFiles: FileChange[] = [
-  {
-    filename: "utils/math.js",
-    original: `export function add(a, b) {\n  return a + b;\n}`,
-    suggested: `export function add(a, b) {\n  console.log("Adding");\n  return a + b;\n}`,
-  },
-  {
-    filename: "index.js",
-    original: `import { add } from './utils/math';\nconsole.log(add(2, 3));`,
-    suggested: `import { add } from './utils/math';\nconsole.log("Result:", add(2, 3));`,
-  },
-];
 
 function App() {
   const params = new URLSearchParams(window.location.search);
@@ -34,50 +25,52 @@ function App() {
   const sha = params.get("sha");
   const iid = params.get("iid");
   const owner = params.get("owner");
-  const [files, setFiles] = useState<FileChange[]>(mockFiles);
+  const [files, setFiles] = useState<FileChange[]>();
   const [editedContent, setEditedContent] = useState<Record<string, string>>(
     {}
   );
+  const [isLoading, setIsLoading] = useState(true);
+
   const [collapsedFiles, setCollapsedFiles] = useState<Set<string>>(new Set());
 
-  const removeFile = (filename: string) => {
-    setFiles(files.filter((file) => file.filename !== filename));
+  const removeFile = (filePath: string) => {
+    setFiles(files?.filter((file) => file.filePath !== filePath));
     const newEditedContent = { ...editedContent };
-    delete newEditedContent[filename];
+    delete newEditedContent[filePath];
     setEditedContent(newEditedContent);
   };
 
-  const toggleFileCollapse = (filename: string) => {
+  const toggleFileCollapse = (filePath: string) => {
     const newCollapsed = new Set(collapsedFiles);
-    if (newCollapsed.has(filename)) {
-      newCollapsed.delete(filename);
+    if (newCollapsed.has(filePath)) {
+      newCollapsed.delete(filePath);
     } else {
-      newCollapsed.add(filename);
+      newCollapsed.add(filePath);
     }
     setCollapsedFiles(newCollapsed);
   };
 
-  const handleCodeEdit = (filename: string, newContent: string) => {
+  const handleCodeEdit = (filePath: string, newContent: string) => {
     setEditedContent({
       ...editedContent,
-      [filename]: newContent,
+      [filePath]: newContent,
     });
   };
 
   const createPullRequest = () => {
     const finalContent: Record<string, string> = {};
-    files.forEach((file) => {
-      finalContent[file.filename] =
-        editedContent[file.filename] || file.suggested;
+    files?.forEach((file) => {
+      finalContent[file.filePath] =
+        editedContent[file.filePath] || file.newCode;
     });
 
     console.log("Creating PR with content:", finalContent);
     alert("PR content logged to console! 🚀");
   };
 
-  const generateDiffLines = (original: string, suggested: string) => {
+  const generateDiffLines = (original: string, newCode: string) => {
     const originalLines = original.split("\n");
-    const suggestedLines = suggested.split("\n");
+    const newCodeLines = newCode.split("\n");
     const diffLines: Array<{
       type: "unchanged" | "added" | "removed";
       content: string;
@@ -86,29 +79,28 @@ function App() {
     }> = [];
 
     let originalIndex = 0;
-    let suggestedIndex = 0;
+    let newCodeIndex = 0;
 
     while (
       originalIndex < originalLines.length ||
-      suggestedIndex < suggestedLines.length
+      newCodeIndex < newCodeLines.length
     ) {
       const originalLine = originalLines[originalIndex];
-      const suggestedLine = suggestedLines[suggestedIndex];
+      const newCodeLine = newCodeLines[newCodeIndex];
 
-      if (originalLine === suggestedLine) {
+      if (originalLine === newCodeLine) {
         diffLines.push({
           type: "unchanged",
           content: originalLine || "",
-          lineNumber: suggestedIndex + 1,
+          lineNumber: newCodeIndex + 1,
           originalLineNumber: originalIndex + 1,
         });
         originalIndex++;
-        suggestedIndex++;
+        newCodeIndex++;
       } else {
-        // Handle removed lines
         if (
           originalIndex < originalLines.length &&
-          !suggestedLines.slice(suggestedIndex).includes(originalLine)
+          !newCodeLines.slice(newCodeIndex).includes(originalLine)
         ) {
           diffLines.push({
             type: "removed",
@@ -116,18 +108,16 @@ function App() {
             originalLineNumber: originalIndex + 1,
           });
           originalIndex++;
-        }
-        // Handle added lines
-        else if (suggestedIndex < suggestedLines.length) {
+        } else if (newCodeIndex < newCodeLines.length) {
           diffLines.push({
             type: "added",
-            content: suggestedLine,
-            lineNumber: suggestedIndex + 1,
+            content: newCodeLine,
+            lineNumber: newCodeIndex + 1,
           });
-          suggestedIndex++;
+          newCodeIndex++;
         } else {
           originalIndex++;
-          suggestedIndex++;
+          newCodeIndex++;
         }
       }
     }
@@ -136,9 +126,15 @@ function App() {
   };
   const hasRun = useRef(false);
   const init = async () => {
-    const data = { repo, sha, iid, owner };
-    const res = await axios.post("http://localhost:3001/", data);
-    console.log(res);
+    try {
+      const data = { repo, sha, iid, owner };
+      const res = await axios.post("http://localhost:3001/", data);
+      setFiles(res.data.data);
+    } catch (err) {
+      console.error("Failed to fetch:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -146,6 +142,22 @@ function App() {
     hasRun.current = true;
     init();
   }, []);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-teal-400 border-opacity-50 mx-auto mb-4"></div>
+          <p className="text-xl font-semibold text-gray-300">
+            Analyzing code with AI...
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            This might take a few seconds.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-mono">
       {/* Header */}
@@ -164,7 +176,7 @@ function App() {
             </div>
           </div>
           <div className="text-sm text-gray-400">
-            {files.length} file{files.length !== 1 ? "s" : ""} to review
+            {files?.length} file{files?.length !== 1 ? "s" : ""} to review
           </div>
         </div>
         <div>
@@ -180,21 +192,20 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="space-y-6">
-          {files.map((file) => {
-            const isCollapsed = collapsedFiles.has(file.filename);
-            const currentContent =
-              editedContent[file.filename] || file.suggested;
-            const diffLines = generateDiffLines(file.original, file.suggested);
+          {files?.map((file) => {
+            const isCollapsed = collapsedFiles.has(file.filePath);
+            const currentContent = editedContent[file.filePath] || file.newCode;
+            const diffLines = generateDiffLines(file.original, file.newCode);
 
             return (
               <div
-                key={file.filename}
+                key={file.filePath}
                 className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden"
               >
                 {/* File Header */}
                 <div className="bg-gray-750 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
                   <button
-                    onClick={() => toggleFileCollapse(file.filename)}
+                    onClick={() => toggleFileCollapse(file.filePath)}
                     className="flex items-center space-x-2 text-left hover:text-teal-400 transition-colors"
                   >
                     {isCollapsed ? (
@@ -203,11 +214,11 @@ function App() {
                       <ChevronDown className="w-4 h-4" />
                     )}
                     <span className="font-semibold text-gray-100">
-                      {file.filename}
+                      {file.filePath}
                     </span>
                   </button>
                   <button
-                    onClick={() => removeFile(file.filename)}
+                    onClick={() => removeFile(file.filePath)}
                     className="p-1 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300 transition-colors"
                     title="Remove file from changes"
                   >
@@ -265,13 +276,13 @@ function App() {
                     {/* Editable Code */}
                     <div>
                       <div className="text-xs text-gray-400 px-4 py-2 bg-gray-800 border-b border-gray-700">
-                        Edit Suggested Code
+                        Edit newCode Code
                       </div>
                       <div className="relative">
                         <textarea
                           value={currentContent}
                           onChange={(e) =>
-                            handleCodeEdit(file.filename, e.target.value)
+                            handleCodeEdit(file.filePath, e.target.value)
                           }
                           className="w-full bg-gray-900 text-gray-100 p-4 pl-16 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/50 min-h-[200px]"
                           spellCheck={false}
@@ -295,14 +306,14 @@ function App() {
             );
           })}
 
-          {files.length === 0 && (
+          {files?.length === 0 && (
             <div className="text-center py-12 text-gray-400">
               <Code2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No files to review</p>
             </div>
           )}
 
-          {files.length > 0 && (
+          {(files?.length ?? 0) > 0 && (
             <div className="flex justify-center pt-6">
               <button
                 onClick={createPullRequest}

@@ -57,6 +57,7 @@ app.post("/", async (req, res) => {
         filePath: original?.filePath || "",
         startLine: original?.startLine || 0,
         endLine: original?.endLine || 0,
+        original: original?.code || "",
       };
     });
     console.log("data", enrichedResults);
