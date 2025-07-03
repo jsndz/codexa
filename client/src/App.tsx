@@ -76,32 +76,22 @@ function App() {
   };
 
   const createPullRequest = async () => {
-    const finalChanges: Record<
-      string,
-      { startLine: number; endLine: number; newCode: string }[]
-    > = {};
-
-    files?.forEach((f) => {
+    const updatedFiles = files?.map((f) => {
       const key = getKey(f.filePath, f.functionName);
       const content = editedContent[key] || f.newCode;
 
-      if (!finalChanges[f.filePath]) {
-        finalChanges[f.filePath] = [];
-      }
-
-      finalChanges[f.filePath].push({
-        startLine: f.startLine,
-        endLine: f.endLine,
+      return {
+        ...f,
         newCode: content,
-      });
+      };
     });
-
+    setFiles(updatedFiles);
     const payload = {
       repo,
       owner,
       sha,
       iid,
-      changes: finalChanges,
+      files: updatedFiles,
     };
 
     try {

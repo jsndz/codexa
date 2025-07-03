@@ -68,4 +68,8 @@ app.post("/", async (req, res) => {
   }
 });
 
+app.post("/pr", (req, res) => {
+  const { data } = req.body;
+});
+
 app.listen(PORT, () => console.log(`Server is running at ${PORT}`));
