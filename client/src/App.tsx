@@ -95,7 +95,7 @@ function App() {
     };
 
     try {
-      console.log(payload);
+      await makePR(payload);
     } catch (err) {
       console.error("❌ Failed to create PR", err);
       alert("Failed to create PR. See console.");
@@ -159,6 +159,14 @@ function App() {
     return diffLines;
   };
   const hasRun = useRef(false);
+  const makePR = async (data: any) => {
+    try {
+      const res = await axios.post("http://localhost:3001/pr", data);
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const init = async () => {
     try {
       const data = { repo, sha, iid, owner };
