@@ -39,8 +39,9 @@ ${JSON.stringify(data, null, 2)}
 
   const json = await response.json();
   const text = json.response;
+  console.log(text);
 
-  const match = text.match(/\[\s*{[\s\S]*?}\s*]/);
+  const match = text.match(/\[\s*{[^]*?}\s*]/);
 
   if (!match) {
     throw new Error("Could not extract JSON from LLM response.");
