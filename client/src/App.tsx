@@ -29,6 +29,9 @@ function App() {
   const iid = params.get("iid");
   const owner = params.get("owner");
   const [files, setFiles] = useState<FileChange[]>();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [pr, setPR] = useState<string | null>();
+
   const [editedContent, setEditedContent] = useState<Record<string, string>>(
     {}
   );
@@ -95,7 +98,8 @@ function App() {
     };
 
     try {
-      await makePR(payload);
+      const res = await makePR(payload);
+      setPR(res.data.link);
     } catch (err) {
       console.error("❌ Failed to create PR", err);
       alert("Failed to create PR. See console.");
@@ -163,17 +167,22 @@ function App() {
     try {
       const res = await axios.post("http://localhost:3001/pr", data);
       console.log(res);
+      return res;
     } catch (error) {
       console.log(error);
+      throw error;
     }
   };
   const init = async () => {
     try {
+      setErrorMessage(null);
+
       const data = { repo, sha, iid, owner };
       const res = await axios.post("http://localhost:3001/", data);
       setFiles(res.data.data);
     } catch (err) {
       console.error("Failed to fetch:", err);
+      setErrorMessage("Something went wrong while fetching data.");
     } finally {
       setIsLoading(false);
     }
@@ -184,6 +193,34 @@ function App() {
     hasRun.current = true;
     init();
   }, []);
+  if (!repo || !sha || !iid || !owner) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 text-white text-center px-6">
+        <Code2 className="w-12 h-12 text-teal-400 mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Welcome to Codexa</h1>
+        <p className="text-gray-400 mb-6">
+          Please provide a valid repository, SHA, and issue ID in the URL query
+          string.
+        </p>
+        <pre className="bg-gray-800 text-sm px-4 py-2 rounded border border-gray-700 text-gray-300">
+          Example:
+          http://localhost:5173/report?repo=jsndz/test&amp;sha=abc123&amp;iid=123&amp;owner=jsndz
+        </pre>
+        <footer className="border-t border-gray-800 text-center text-sm text-gray-500 py-6 ">
+          <p>
+            Built with 💻 by{" "}
+            <a
+              href="https://github.com/jsndz"
+              target="_blank"
+              className="text-teal-400 hover:underline"
+            >
+              jsndz
+            </a>
+          </p>
+        </footer>
+      </div>
+    );
+  }
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -196,6 +233,21 @@ function App() {
             This might take a few seconds.
           </p>
         </div>
+      </div>
+    );
+  }
+  if (errorMessage) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white text-center px-6">
+        <Code2 className="w-12 h-12 text-red-500 mb-4" />
+        <h1 className="text-2xl font-bold mb-2 text-red-400">Error</h1>
+        <p className="text-gray-400 mb-6 max-w-md">{errorMessage}</p>
+        <button
+          onClick={init}
+          className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded"
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -231,7 +283,6 @@ function App() {
           </p>
         </div>
       </header>
-
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="space-y-6">
           {Object.entries(groupedFiles).map(([filePath, functions]) => {
@@ -385,17 +436,36 @@ function App() {
 
           {(files?.length ?? 0) > 0 && (
             <div className="flex justify-center pt-6">
-              <button
-                onClick={createPullRequest}
-                className="flex items-center space-x-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-              >
-                <Rocket className="w-5 h-5" />
-                <span>Create Pull Request with These Suggestions</span>
-              </button>
+              {pr ? (
+                <button className="flex items-center space-x-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                  <a href={pr}>Go To PR</a>
+                </button>
+              ) : (
+                <button
+                  onClick={createPullRequest}
+                  className="flex items-center space-x-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  <Rocket className="w-5 h-5" />
+
+                  <span>Create Pull Request with These Suggestions</span>
+                </button>
+              )}
             </div>
           )}
         </div>
-      </main>
+      </main>{" "}
+      <footer className="border-t border-gray-800 text-center text-sm text-gray-500 py-6 ">
+        <p>
+          Built with 💻 by{" "}
+          <a
+            href="https://github.com/jsndz"
+            target="_blank"
+            className="text-teal-400 hover:underline"
+          >
+            jsndz
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }
