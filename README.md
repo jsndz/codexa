@@ -1,84 +1,69 @@
-# 🚀 Codexa – AI-Driven Code Review & Static Analysis GitHub App
+# Codexa – AI-Driven Code Review & Static Analysis GitHub App
 
-Codexa is an intelligent GitHub App written in **Typescript** that integrates directly into your repository. Once installed, it listens to `push` events and performs **automated static code analysis** enhanced with **LLMs (Large Language Models)** to detect issues, improve code quality, and prevent secrets leakage — all without leaving GitHub.
+Codexa is an intelligent GitHub App that automatically reviews your code on every push.  
+It combines static analysis and LLM-powered insights to catch issues, suggest improvements, and help prevent secrets leakage — all within your GitHub workflow.
 
 ---
 
-## ✨ What Codexa Does
+## What Codexa Does
 
 On every push to a repository where Codexa is installed:
 
-1. 📩 **Receives Code via GitHub Webhook**
+1.  **Receives Code via GitHub Webhook**
 
-   - Listens to `push` events
-   - Automatically pulls the latest commits and file diffs
+- Listens to `push` events
+- Automatically pulls the latest commits and file diffs
 
-2. 🧠 **Performs Static Code Analysis**
+2.  **Performs Static Code Analysis**
 
-   - Evaluates code complexity
-   - Highlights bad patterns, anti-patterns, or structural issues
+- Evaluates code complexity
+- Highlights bad patterns, anti-patterns, or structural issues
 
-3. 🔐 **Detects API Keys / Secrets**
+3.  **Detects API Keys / Secrets**
 
-   - Scans for common patterns of hardcoded secrets
-   - Warns about leaked tokens, credentials, and misconfigurations
+- Scans for common patterns of hardcoded secrets
+- Warns about leaked tokens, credentials, and misconfigurations
 
-4. 🤖 **Uses LLMs for Higher-Order Insights**
+4.  **Uses LLMs for Higher-Order Insights**
 
-   - Leverages an LLM to provide contextual feedback, code smells, and refactor suggestions
-   - Offers human-like explanations and improvement tips
+- Leverages an LLM to provide contextual feedback, code smells, and refactor suggestions
+- Offers human-like explanations and improvement tips
 
-5. ✅ **Reports Results via GitHub Checks**
+5. **Reports Results via GitHub Checks**
 
    - Posts inline annotations on commits/files
    - Summarizes issues as Check Run results directly on GitHub UI
 
 ---
 
-## 📦 Features
+## Features
 
 - Works **out-of-the-box** after GitHub App installation
 - **Fully automated** — no CLI tools or integrations required
 - **Modular analyzer pipeline** (can use regex, ASTs, LLMs)
 - Displays all feedback as part of GitHub Checks on commits
-- Can be extended to include **pull request summaries**, Slack alerts, etc.
-
----
-
-## 🔐 Permissions Required
-
-When creating your GitHub App, request these permissions:
-
-| Permission          | Access Level |
-| ------------------- | ------------ |
-| Repository contents | Read-only    |
-| Webhooks            | Push         |
-| Checks              | Read & write |
-| Metadata            | Read-only    |
+- Give a full on **llm analysis** as a PR.
 
 ---
 
 ## 📦 Tech Stack
 
-- **Language**: JavaScript (Node.js)
-- **GitHub API**: [Octokit](https://github.com/octokit/octokit.js)
-- **Webhooks Proxy** (local): [Smee.io](https://smee.io/)
-- **Static Analysis**: AST with tree-sitter
-- **LLM Integration**: OpenAI / Local LLMs via API
-- **Server**: Express
+- **Language:** TypeScript (Node.js)
+- **GitHub API:** [Octokit](https://github.com/octokit/octokit.js)
+- **Webhooks Proxy (local):** [Smee.io](https://smee.io/)
+- **Static Analysis:** AST parsing with tree-sitter
+- **LLM Integration:** CodeLlama via [Ollama](https://ollama.com/)
+- **Server Framework:** Express.js
 
 ---
 
-## 🧪 Example Output on GitHub
+## Code Layout
 
-- ✅ Codexa appears as a GitHub Check on each commit
-- 🧵 Click into the check to see:
-
-  - 🧠 LLM-generated advice
-  - ⚠️ Secrets or API key warnings
-  - ⚙️ Code complexity reports
-
-- 🖊️ Inline annotations show exactly which lines have issues
+.
+├── client # Frontend app
+├── github_app # Static code analysis + generates LLM link
+├── server # Runs the LLM analysis
+└── README.md
 
 ---
 
@@ -100,25 +85,79 @@ When creating your GitHub App, request these permissions:
 
 ---
 
-## Setup
+## Setup Guide
 
-```sh
-# Install dependencies
+### 1. Create a GitHub App
+
+Follow the [GitHub Apps documentation](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps) to create a GitHub App with the following permissions:
+
+| Permission          | Access Level |
+| ------------------- | ------------ |
+| Repository contents | Read-only    |
+| Webhooks            | Read & write |
+| Checks              | Read & write |
+| Metadata            | Read-only    |
+
+- **Important:** When configuring the Webhook, use a webhook proxy from [Smee.io](https://smee.io/) for local development.
+  → Copy your Smee URL and paste it into the **Webhook URL** field of your GitHub App settings.
+
+- Download your **Private Key** from the GitHub App page.
+
+- Note down the **App ID** and **Client ID/Secret**.
+
+---
+
+### 2. Install the LLM model
+
+You’ll need to install **codellama:7b-instruct** (or any other supported model) locally using [Ollama](https://ollama.com/).
+
+```bash
+ollama pull codellama:7b-instruct
+```
+
+---
+
+### 3. Start the Project
+
+Open **3 different terminals** and run the following in each:
+
+---
+
+#### Terminal 1: Server
+
+```bash
+cd server
+# Copy .env.example to .env and replace values (especially GitHub App credentials, Ollama endpoint, etc.)
+cp .env.example .env
+# Fill in your App ID, Private Key Path, Webhook Secret, and Smee URL in the .env file
 npm install
-
-# Run the bot
 npm start
 ```
 
-## Docker
+---
 
-```sh
-# 1. Build container
-docker build -t codexa .
+#### Terminal 2: Client (Frontend)
 
-# 2. Start container
-docker run -e APP_ID=<app-id> -e PRIVATE_KEY=<pem-value> codexa
+```bash
+cd client
+npm install
+npm run dev
 ```
+
+---
+
+#### Terminal 3: GitHub App Handler
+
+```bash
+cd github_app
+# Copy .env.example to .env and replace values (App ID, Private Key, etc.)
+cp .env.example .env
+npm install
+npm run build
+npm start
+```
+
+---
 
 ## Contributing
 
@@ -129,60 +168,3 @@ For more, check out the [Contributing Guide](CONTRIBUTING.md).
 ## License
 
 [ISC](LICENSE) © 2025 jsndz
-
-## User Flow
-
-- GitHub Check has a link like https://codexa.app/ai-report?sha=abc123&repo=xyz
-- When frontend loads, it sends metadata (sha, repo, etc.) to Codexa backend
-- Backend fetches the files using GitHub App token
-- Backend generates LLM suggestions (live)
-- Sends result to frontend to render
-- You can now show a Compare View with PR button
-
-## Visual
-
-1.  GitHub Push → GitHub App → Check with "View AI Suggestions"
-    |
-    User clicks (with ?sha=xxx&repo=yyy)
-    |
-    Frontend calls /analyze endpoint
-    |
-    Backend fetches changed files at that SHA
-    |
-    Sends code to LLM (Ollama/other)
-    |
-    Returns annotated suggestions + diffs
-    |
-    Frontend renders diff + "Create PR" button
-
-2.  ┌────────────────────────────┐
-    │ GitHub.com │
-    │ │
-    │ ┌──── Push → Webhook ─────┐
-    │ │ │
-    └──▼─────────────────────────┘
-    │
-    ┌──▼───────────────────────────┐
-    │ GitHub App (Probot) │
-    │ - Receives push │
-    │ - Runs SCA │
-    │ - Posts Check with Link │
-    │ https://codexa.app/report │
-    └──────────────────────────────┘
-
-    User clicks link on GitHub Check
-
-┌────────────┐
-│ Frontend │
-│ codexa.app │
-└─────┬──────┘
-│
-▼
-┌────────────────────────────┐
-│ Codexa Backend (LLM API) │
-│ - Receives SHA │
-│ - Auths as GitHub App │
-│ - Fetches changed files │
-│ - Analyzes via LLM │
-│ - Returns diff │
-└────────────────────────────┘
