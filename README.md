@@ -5,6 +5,10 @@ It combines static analysis and LLM-powered insights to catch issues, suggest im
 
 ---
 
+![](/public/video.mp4)
+
+---
+
 ## What Codexa Does
 
 On every push to a repository where Codexa is installed:
