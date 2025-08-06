@@ -5,7 +5,7 @@ It combines static analysis and LLM-powered insights to catch issues, suggest im
 
 ---
 
-![](/public/video.mp4)
+[Watch Demo](/public/video.mp4)
 
 ---
 
