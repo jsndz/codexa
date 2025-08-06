@@ -5,7 +5,7 @@ It combines static analysis and LLM-powered insights to catch issues, suggest im
 
 ---
 
-[![Watch Demo](https://img.youtube.com/vi/lh2DtaT6jxw/0.jpg)](https://github.com/jsndz/codexa/raw/refs/heads/master/public/video.mp4)
+[![Watch Demo](https://img.youtube.com/vi/lh2DtaT6jxw/0.jpg)](https://www.youtube.com/watch?v=lh2DtaT6jxw)
 
 ---
 
